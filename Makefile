@@ -30,10 +30,10 @@ SRC = $(filter-out $(EXLUDED),$(notdir $(SRC_FULL_PATH)))
 OBJ = $(addprefix $(BIN_DIR)/, $(SRC:.cpp=.o))
 
 # Include library
-LIB_PATH =
-LIB_DEPEND = 
-CXXFLAGS += $(addprefix -I, $(LIB_PATH)/include)
-LXXFLAGS += $(addprefix -L, $(LIB_PATH)/lib) $(addprefix -l, $(LIB_DEPEND))
+LIB_PATH = C:/src/mylib/ToolsLib C:/SFML-2.5.1
+LIB_DEPEND = ToolsLib sfml-graphics sfml-window sfml-system
+CXXFLAGS += $(patsubst %,-I%/include,$(LIB_PATH))
+LXXFLAGS += $(patsubst %,-L%/lib,$(LIB_PATH)) $(addprefix -l, $(LIB_DEPEND))
 
 # Сonfiguring file search paths
 VPATH = echo $(subst \,/,$(dir $(SRC_FULL_PATH)))

@@ -2,6 +2,7 @@
 #define SRC_GAME_GAME_HPP_
 
 #include "../tree/BinaryTree.hpp"
+#include "../engine/Engine.hpp"
 
 struct Game {
     enum State {
@@ -11,6 +12,8 @@ struct Game {
 
     BinTree tree_ = {};
     BinTree::Node *active_node_ = nullptr;
+
+    Engine engine_ = {};
 };
 
 void RunGame(Game *game);
