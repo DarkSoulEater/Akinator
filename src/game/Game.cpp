@@ -64,7 +64,7 @@ static void ReadTreeFromFile(Game *game, const char* file_name) {
 static void SaveOldVersion() {
     #define OLD_TREE_VERSION_PATH "C:\\Users\\eleno\\AppData\\Local\\Temp\\akinator.tmp\\"
     #define OLD_TREE_VERSION_FILE "old_tree_version.txt"
-    size_t kCommandBuferSize = 256;
+    const size_t kCommandBuferSize = 256;
     char buffer[kCommandBuferSize] = {};
 
     sprintf(buffer, "if not exist %s md %s && echo OLD AKINAOTR TREE VERSION > %s", OLD_TREE_VERSION_PATH, OLD_TREE_VERSION_PATH, OLD_TREE_VERSION_PATH OLD_TREE_VERSION_FILE);
@@ -175,7 +175,14 @@ static void AddFork(Game *game) {
     game->active_node_->L->P = game->active_node_->R->P = game->active_node_;
 
     TableInsert(game->node_table, (const char*)game->active_node_->L->data, game->active_node_->L);
-    TableInsert(game->node_table, (const char*)game->active_node_->R->data, game->active_node_->R);
+    TableInsert(game->node_table, (const char*)game->active_node_->data, game->active_node_);
+
+    BinTree::Node **data_ptr = (BinTree::Node**)TableGetDataPtr(game->node_table, (const char*)game->active_node_->R->data);
+    if (data_ptr == nullptr) {
+        fprintf(stderr, "error: vertex data was not created in hash-table\n");
+        abort();
+    }
+    *data_ptr = game->active_node_->R;
 
     puts("\nOk, I'm remember\n");
 }
@@ -187,7 +194,7 @@ static void GetPathFromRoot(BinTree::Node *node, Stack *path_stack) {
     do {
         StackPush(path_stack, node);
         node = node->P;        
-    } while (node->P);
+    } while (node);
 }
 
 static void TellNodeProperties(Game *game, const char* leaf) {
@@ -223,25 +230,59 @@ static void TellNodeProperties(Game *game, const char* leaf) {
     printf("\n");
 }
 
+#define DOT_PATH "\"C:/Program Files/Graphviz/bin/dot.exe\""
 static void CreateGraphicsTree(Game *game) {
     assert(game);
 
-    
+    const char* kTreeDumpPath = "bd/tree.dot";
+
+    FILE *graph_file = nullptr;
+    if (fopen_s(&graph_file, kTreeDumpPath, "w")) {
+        perror("Could not open file\n");
+        return;
+    }
+
+    fprintf(graph_file, "digraph G{\nsearchsize=100\n");
+
+    Stack *dfs_stack = StackAllocate();
+    BinTree::Node *node = game->tree_.head_;
+    StackPush(dfs_stack, node);
+
+    while (StackSize(dfs_stack)){
+        node = StackPop(dfs_stack);
+
+        if (node->L) {
+            fprintf(graph_file, "\"%s\"->\"%s\";\n", (const char*)node->data, (const char*)node->L->data);
+            StackPush(dfs_stack, node->L);
+        }
+
+        if (node->R) {
+            fprintf(graph_file, "\"%s\"->\"%s\";\n", (const char*)node->data, (const char*)node->R->data);
+            StackPush(dfs_stack, node->R);
+        }
+
+        fprintf(graph_file, "\"%s\"[color=black];\n", (const char*)node->data);
+    }
+
+    fprintf(graph_file, "}");
+
+    fclose(graph_file);
+
+    char command_buffer[256] = {};
+    sprintf(command_buffer, DOT_PATH  " -O %s -T png", kTreeDumpPath);
+    system(command_buffer);
+
+    system("bd\\tree.dot.png");
 }
 
-static void ConsoleCicle(Game *game) {
-    assert(game);
-
-    TellNodeProperties(game, "apple");
-    return;
-
+static void AkinatorGame(Game *game) {
     game->active_node_ = game->tree_.head_;
 
     while (!ActiveNodeIsTerminal(game)) {
         printf("It is %s? (Y/N)\n", GetQuestion(game));
         
         char c = 0;
-        if ((c = getc(stdin)) == 'Y') {
+        if ((c = (char)getc(stdin)) == 'Y') {
             game->active_node_ = game->active_node_->L;
         } else if (c == 'N'){
             game->active_node_ = game->active_node_->R;
@@ -253,7 +294,7 @@ static void ConsoleCicle(Game *game) {
     }
 
     printf("It is: %s! Right? (Y/N)\n", GetDescription(game));
-    char c = getc(stdin);
+    char c = (char)getc(stdin);
     BufferFlush();
     if (c == 'Y') {
         puts("I'm WINNNN!!!\n");
@@ -261,6 +302,30 @@ static void ConsoleCicle(Game *game) {
         AddFork(game);
     } else {
         puts("Uncorrect answer :( ... I'm assume that i guessed right\n");
+    }
+}
+
+static void ConsoleCicle(Game *game) {
+    assert(game);
+
+    puts("Select game: akinator | properties | comparison | graphic (1/2/3/4)\n");
+
+    char c = (char)getc(stdin);
+    BufferFlush();
+
+    if (c == '1') {
+        AkinatorGame(game);
+    } else if (c == '2') {
+        char name[100] = {};
+        scanf("%[^\n]", name);
+        BufferFlush();
+        TellNodeProperties(game, name);    
+    } else if (c == '3') {
+        printf("Not implemated\n");
+    } else if (c == '4') {
+        CreateGraphicsTree(game);
+    } else {
+        printf("Uncorrect game type\n");
     }
 }
 

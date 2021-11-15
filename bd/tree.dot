@@ -1,0 +1,40 @@
+digraph G{
+searchsize=100
+"animal"->"came from hell";
+"animal"->"chill room";
+"animal"[color=black];
+"chill room"->"sleeps on the right";
+"chill room"->"clever";
+"chill room"[color=black];
+"clever"->"Akinator";
+"clever"->"other people";
+"clever"[color=black];
+"other people"[color=black];
+"Akinator"[color=black];
+"sleeps on the right"->"dead soul";
+"sleeps on the right"->"down";
+"sleeps on the right"[color=black];
+"down"->"Denchick";
+"down"->"Tima";
+"down"[color=black];
+"Tima"[color=black];
+"Denchick"[color=black];
+"dead soul"->"Maksim";
+"dead soul"->"Yarik";
+"dead soul"[color=black];
+"Yarik"[color=black];
+"Maksim"[color=black];
+"came from hell"->"cute";
+"came from hell"->"creeps";
+"came from hell"[color=black];
+"creeps"->"snake";
+"creeps"->"dog";
+"creeps"[color=black];
+"dog"[color=black];
+"snake"[color=black];
+"cute"->"deamon";
+"cute"->"cat";
+"cute"[color=black];
+"cat"[color=black];
+"deamon"[color=black];
+}
