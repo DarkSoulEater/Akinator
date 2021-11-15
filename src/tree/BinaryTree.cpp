@@ -16,5 +16,5 @@ void BinTreeInsert(BinTree::Node **ptr, void *data) {
         ERROR("failed to allocate memory for binary tree node");
     }
 
-    (*ptr)->data = data;
+    (*ptr)->data_ = data;
 }

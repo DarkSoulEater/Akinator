@@ -3,9 +3,9 @@
 
 struct BinaryTree {
     struct Node {
-        void *data;
+        void *data_;
 
-        Node *L, *R, *P;
+        Node *left_, *right_, *parent_;
     } *head_ = nullptr;
 };
 
