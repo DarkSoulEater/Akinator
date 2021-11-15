@@ -5,7 +5,7 @@ struct BinaryTree {
     struct Node {
         void *data;
 
-        Node *L, *R;
+        Node *L, *R, *P;
     } *head_ = nullptr;
 };
 

@@ -1,6 +1,7 @@
 #ifndef SRC_GAME_GAME_HPP_
 #define SRC_GAME_GAME_HPP_
 
+#include "HashTable.hpp"
 #include "../tree/BinaryTree.hpp"
 #include "../engine/Engine.hpp"
 
@@ -12,6 +13,7 @@ struct Game {
 
     BinTree tree_ = {};
     BinTree::Node *active_node_ = nullptr;
+    HashTable *node_table       = nullptr;
 
     Engine engine_ = {};
 };

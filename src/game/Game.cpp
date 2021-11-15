@@ -5,6 +5,7 @@
 #include "Game.hpp"
 
 #define T BinTree::Node*
+#include "LongArray.hpp"
 #include "Stack.hpp"
 
 #include <stdio.h>
@@ -13,14 +14,11 @@
 const char* kSaveFileName = "bd\\tree_save.txt";  
 
 // Game::private:
-static char* NoneStrdup(const char* str) {
-    return (char*)str;
-}
-
 static void ReadTreeFromFile(Game *game, const char* file_name) {
-    Buffer *buffer = CreateBufferFromFile(file_name);
+    assert(game);
+    assert(file_name);
 
-    HashTable *table = TableAllocate();
+    Buffer *buffer = CreateBufferFromFile(file_name);
 
     char* data = (char*) BufferGetData(buffer);
     size_t buffer_size = BufferGetSize(buffer);
@@ -28,33 +26,32 @@ static void ReadTreeFromFile(Game *game, const char* file_name) {
     for (size_t i = 0; i < buffer_size; ++i) {
         if (data[i] == '\n' || data[i] == '\r') continue;
 
-        BinTree::Node *first = (BinTree::Node*) TableLookup(table, data + i);
-        printf("%s\n", data + i);
+        BinTree::Node *first = (BinTree::Node*) TableLookup(game->node_table, data + i);
 
         if (first == nullptr) {
-            printf("Fiszero\n");
             BinTreeInsert(&game->tree_.head_, data + i);
 
             first = game->tree_.head_;
-            TableInsert(table, data + i, first);
+            TableInsert(game->node_table, data + i, first);
         }
 
         while (data[i] != '>' && data[i] != '<') {
             ++i;
         }
         ++i;
-        printf("%s\n", data + i);
         
-        BinTree::Node *second = (BinTree::Node*) TableLookup(table, data + i);
+        BinTree::Node *second = (BinTree::Node*) TableLookup(game->node_table, data + i);
 
         if (second == nullptr) {
-            printf("S is zero\n");
             BinTreeInsert((data[i - 1] == '<' ? &first->L : &first->R), data + i);
 
             second = (data[i - 1] == '<' ? first->L : first->R);
-            TableInsert(table, data + i, second);
+            second->P = first;
+
+            TableInsert(game->node_table, data + i, second);
         } else {
             (data[i - 1] == '<' ? first->L = second : first->R = second);
+            second->P = first;
         }
 
         while (data[i] != '\0') {
@@ -62,8 +59,6 @@ static void ReadTreeFromFile(Game *game, const char* file_name) {
         }
         ++i;
     }
-
-    TableDeallocate(&table);
 }
 
 static void SaveOldVersion() {
@@ -86,6 +81,9 @@ static void SaveOldVersion() {
 }
 
 static void WriteTreeToFile(Game *game, const char* file_name) {
+    assert(game);
+    assert(file_name);
+
     SaveOldVersion();
 
     FILE *save_file = nullptr;
@@ -118,6 +116,8 @@ static void Init(Game *game) {
 
     //game->state_ = Game::StartMenu;
     game->state_ = Game::ConsoleMode;
+
+    game->node_table = TableAllocate();
 
     ReadTreeFromFile(game, kSaveFileName);
 
@@ -153,6 +153,8 @@ void static inline BufferFlush() {
 }
 
 static void AddFork(Game *game) {
+    assert(game);
+
     puts("What did you wish for?\n");
 
     const size_t kStrSize = 50;
@@ -170,10 +172,69 @@ static void AddFork(Game *game) {
     BinTreeInsert(&game->active_node_->L, strdup(name_buffer));
     game->active_node_->data = strdup(description_buffer);
 
+    game->active_node_->L->P = game->active_node_->R->P = game->active_node_;
+
+    TableInsert(game->node_table, (const char*)game->active_node_->L->data, game->active_node_->L);
+    TableInsert(game->node_table, (const char*)game->active_node_->R->data, game->active_node_->R);
+
     puts("\nOk, I'm remember\n");
 }
 
+static void GetPathFromRoot(BinTree::Node *node, Stack *path_stack) {
+    assert(node);
+    assert(path_stack);
+
+    do {
+        StackPush(path_stack, node);
+        node = node->P;        
+    } while (node->P);
+}
+
+static void TellNodeProperties(Game *game, const char* leaf) {
+    assert(game);
+    assert(leaf);
+
+    BinTree::Node *node = (BinTree::Node*) TableLookup(game->node_table, leaf);
+    if (!node) {
+        printf("The selected sheet does not exist\n");
+        return;
+    }
+
+    if (node->L || node->R) {
+        printf("The selected sheet is not a sheet\n");
+        return;
+    }
+
+    Stack *path_stack = StackAllocate();
+    GetPathFromRoot(node, path_stack);
+
+    printf("%s: ", leaf);
+
+    while (StackSize(path_stack) - 1 > 0) {
+        node = StackPop(path_stack);
+
+        if (StackTop(path_stack) == node->R) {
+            printf("!");
+        }
+
+        printf("%s ", (const char*)node->data);
+    }
+    
+    printf("\n");
+}
+
+static void CreateGraphicsTree(Game *game) {
+    assert(game);
+
+    
+}
+
 static void ConsoleCicle(Game *game) {
+    assert(game);
+
+    TellNodeProperties(game, "apple");
+    return;
+
     game->active_node_ = game->tree_.head_;
 
     while (!ActiveNodeIsTerminal(game)) {
